@@ -44,7 +44,7 @@ services:
       - MYSQL_ALLOW_EMPTY_PASSWORD=true
       - MYSQL_DATABASE=socksdb
   carts:
-    image: weaveworksdemos/carts:0.4.8
+    image: glenthereb/carts-redis:latest
     hostname: carts
     restart: always
     cap_drop:
@@ -56,6 +56,12 @@ services:
       - /tmp:rw,noexec,nosuid
     environment:
       - JAVA_OPTS=-Xms64m -Xmx128m -XX:+UseG1GC -Djava.security.egd=file:/dev/urandom -Dspring.zipkin.enabled=false
+      - SPRING_DATA_MONGODB_URI=mongodb://carts-db:27017/carts-db
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+    depends_on:
+      - carts-db
+      - redis
   carts-db:
     image: mongo:3.4
     hostname: carts-db
@@ -69,6 +75,22 @@ services:
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid
+  redis:
+    image: redis:7-alpine
+    hostname: redis
+    restart: always
+    cap_drop:
+      - all
+    cap_add:
+      - SETGID
+      - SETUID
+    read_only: false
+    command: redis-server --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
   orders:
     image: weaveworksdemos/orders:0.4.7
     hostname: orders
