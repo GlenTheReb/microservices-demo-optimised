@@ -59,9 +59,15 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://carts-db:27017/carts-db
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_DATABASE=0
+      - SPRING_REDIS_TIMEOUT=2000ms
+      - SPRING_PROFILES_ACTIVE=redis
     depends_on:
       - carts-db
       - redis
+    links:
+      - redis:redis
+      - carts-db:carts-db
   carts-db:
     image: mongo:3.4
     hostname: carts-db
